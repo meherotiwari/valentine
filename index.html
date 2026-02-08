@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-  <title>Valentine?</title>
+  <title>Valentile?</title>
   <style>
     :root{
       --bg1:#ffe6ef; --bg2:#fff7fb; --text:#3a0b1a;
@@ -17,7 +17,7 @@
       color:var(--text);
       user-select:none;
       -webkit-tap-highlight-color:transparent;
-      touch-action:none; /* helps iOS not treat gestures as scroll */
+      touch-action:none; /* iOS gesture-safe */
     }
 
     /* Background hearts layer */
@@ -29,14 +29,14 @@
     }
     .bgHeart{
       position:absolute;
-      opacity:0.35;
+      opacity:0.40;
       filter: drop-shadow(0 8px 10px rgba(58,11,26,0.12));
       animation: drift linear forwards;
       will-change: transform, opacity;
     }
     @keyframes drift{
       0%   { transform: translate3d(0, 110vh, 0) rotate(0deg) scale(0.9); opacity: 0; }
-      10%  { opacity: 0.35; }
+      10%  { opacity: 0.40; }
       100% { transform: translate3d(0, -130vh, 0) rotate(360deg) scale(1.25); opacity: 0; }
     }
 
@@ -69,14 +69,13 @@
       pointer-events:none;
     }
     #timerPill{
-      pointer-events:none;
       background: rgba(255,255,255,0.78);
       border: 1px solid rgba(255,45,85,0.18);
       backdrop-filter: blur(8px);
       border-radius: 999px;
       padding: 10px 14px;
       box-shadow: 0 10px 28px rgba(58,11,26,0.10);
-      font-weight: 700;
+      font-weight: 800;
       color: #7a0f2b;
       letter-spacing: 0.2px;
     }
@@ -89,19 +88,19 @@
       border:none;
       border-radius:999px;
       padding:14px 22px;
-      font-weight:800;
+      font-weight:900;
       font-size:18px;
       color:#fff;
       cursor:pointer;
       background:linear-gradient(135deg,var(--accent),var(--accent2));
       box-shadow:0 12px 30px rgba(255,45,85,.35);
-      -change:transform;
+      will-change:transform;
       transform:translate3d(0,0,0);
       -webkit-user-select:none;
     }
     #yesBtn:active{ filter:brightness(.95); } /* don't override transform */
 
-    /* Start overlay (minimal, only Start button) */
+    /* Start overlay: only Start button */
     #startOverlay{
       position:fixed; inset:0; z-index:10;
       display:grid; place-items:center;
@@ -114,7 +113,7 @@
       border:none;
       border-radius:999px;
       padding:14px 20px;
-      font-weight:800;
+      font-weight:900;
       font-size:18px;
       color:#fff;
       background:linear-gradient(135deg,var(--accent),var(--accent2));
@@ -155,7 +154,7 @@
       opacity:0.95;
       filter:drop-shadow(0 6px 8px rgba(58,11,26,.18));
       animation: floatUp linear forwards;
-      -change: transform, opacity;
+      will-change: transform, opacity;
     }
     @keyframes floatUp{
       0%{ transform:translateY(30px) rotate(0) scale(.9); opacity:0; }
@@ -169,7 +168,7 @@
 
   <div class="center">
     <div class="card">
-      <h1>Will you be my valentine Sweta? 💘</h1>
+      <h1>Will you be my valentile 💘</h1>
     </div>
   </div>
 
@@ -185,7 +184,7 @@
     <div class="winCard">
       <h2>Congratulations my love for being my valentine 🌹</h2>
       <p>❤️</p>
-      <p style="margin-top:10px; font-weight:700; color:#7a0f2b;">
+      <p style="margin-top:10px; font-weight:900; color:#7a0f2b;">
         You caught it in <span id="finalTime">0.00</span>s
       </p>
     </div>
@@ -202,10 +201,8 @@
   const flowers = document.getElementById("flowers");
   const startOverlay = document.getElementById("startOverlay");
   const startBtn = document.getElementById("startBtn");
-
   const timeText = document.getElementById("timeText");
   const finalTime = document.getElementById("finalTime");
-
   const bg = document.getElementById("bgHearts");
 
   // ---------- Background hearts ----------
@@ -215,33 +212,31 @@
     el.className = "bgHeart";
     el.textContent = heartEmojis[(Math.random() * heartEmojis.length) | 0];
 
-    const x = Math.random() * window.innerWidth;
-    el.style.left = x + "px";
+    el.style.left = (Math.random() * window.innerWidth) + "px";
     el.style.top = (window.innerHeight + 40) + "px";
 
-    const size = 16 + Math.random() * 26;
-    el.style.fontSize = size + "px";
-
-    const dur = 6 + Math.random() * 8; // slower drift
-    el.style.animationDuration = dur + "s";
+    el.style.fontSize = (14 + Math.random() * 32) + "px";
+    el.style.animationDuration = (5 + Math.random() * 9) + "s";
 
     bg.appendChild(el);
     el.addEventListener("animationend", () => el.remove());
   }
+  for (let i = 0; i < 28; i++) setTimeout(spawnBgHeart, i * 90);
+  setInterval(() => { for (let i = 0; i < 4; i++) spawnBgHeart(); }, 650);
 
-  // Start a steady background stream right away
-  for (let i = 0; i < 20; i++) setTimeout(spawnBgHeart, i * 120);
-  setInterval(() => {
-    for (let i = 0; i < 3; i++) spawnBgHeart();
-  }, 700);
-
-  // ---------- Game movement ----------
-  let x = 0, y = 0;              // top-left of button
-  let vx = 420, vy = 320;        // px/sec
+  // ---------- Game movement (HARD MODE) ----------
+  let x = 0, y = 0;               // button top-left
+  let vx = 720, vy = 560;         // HARD base speed
   let lastT = 0;
-  let running = false;           // start only after user gesture
+  let running = false;
 
   const isTouch = matchMedia("(pointer: coarse)").matches;
+
+  // Fake slowdown -> instant escape state
+  let slowActive = false;
+  let slowUntil = 0;
+  let escapeAt = 0;
+  let savedVx = 0, savedVy = 0;
 
   const bounds = () => {
     const r = btn.getBoundingClientRect();
@@ -261,6 +256,15 @@
     y = Math.max(0, Math.min(y, b.maxY));
   };
 
+  function hardTurnJitter() {
+    // adds unpredictability even without interaction
+    if (Math.random() < 0.08) vx *= -1;
+    if (Math.random() < 0.08) vy *= -1;
+    const a = Math.random() * Math.PI * 2;
+    vx += Math.cos(a) * 70;
+    vy += Math.sin(a) * 70;
+  }
+
   function tick(t) {
     if (!running) return;
 
@@ -268,7 +272,28 @@
     const dt = Math.min(0.033, (t - lastT) / 1000);
     lastT = t;
 
+    // Handle fake slowdown / escape sequence
+    if (slowActive) {
+      if (t >= escapeAt) {
+        // instant escape burst
+        slowActive = false;
+
+        vx = savedVx;
+        vy = savedVy;
+
+        const a = Math.random() * Math.PI * 2;
+        vx = vx * 2.2 + Math.cos(a) * 520;
+        vy = vy * 2.2 + Math.sin(a) * 520;
+      } else if (t < slowUntil) {
+        // keep it slow during the tease
+        // (do nothing; current vx/vy already slowed)
+      }
+    } else {
+      hardTurnJitter();
+    }
+
     const b = bounds();
+
     x += vx * dt;
     y += vy * dt;
 
@@ -282,32 +307,70 @@
     requestAnimationFrame(tick);
   }
 
+  // Evil flee: sometimes pretends to slow down, then teleports-speed escape
   function flee() {
     if (!running) return;
 
+    const now = performance.now();
+
+    // If already teasing, don't stack
+    if (slowActive) return;
+
+    // 45% chance: fake slowdown first
+    if (Math.random() < 0.45) {
+      slowActive = true;
+
+      // store "real" velocity to restore and burst later
+      savedVx = vx;
+      savedVy = vy;
+
+      // slow it down briefly to bait the tap
+      vx *= 0.25;
+      vy *= 0.25;
+
+      slowUntil = now + 180;  // teaser window
+      escapeAt = now + 220;   // instant escape shortly after
+      return;
+    }
+
+    // Otherwise: immediate hard panic
     const speed = Math.hypot(vx, vy);
-    const boost = Math.min(1.25, 700 / Math.max(speed, 1));
+    const boost = Math.min(1.6, 900 / Math.max(speed, 1));
     vx *= boost; vy *= boost;
 
     const a = Math.random() * Math.PI * 2;
-    vx += Math.cos(a) * 220;
-    vy += Math.sin(a) * 220;
+    vx += Math.cos(a) * 420;
+    vy += Math.sin(a) * 420;
 
-    const cap = 1100;
+    if (Math.random() < 0.35) vx *= -1;
+    if (Math.random() < 0.35) vy *= -1;
+
+    // cap
+    const cap = 1600;
     const ns = Math.hypot(vx, vy);
     if (ns > cap) { vx = (vx / ns) * cap; vy = (vy / ns) * cap; }
   }
 
-  // Desktop hover makes it run away
+  // Desktop hover
   btn.addEventListener("mouseenter", () => { if (!isTouch) flee(); });
 
-  // Touch: arm flee after a tiny delay so taps can still win
+  // Extra evil: proximity panic when pointer gets close
+  document.addEventListener("pointermove", (e) => {
+    if (!running) return;
+    const r = btn.getBoundingClientRect();
+    const cx = r.left + r.width / 2;
+    const cy = r.top + r.height / 2;
+    const dist = Math.hypot(cx - e.clientX, cy - e.clientY);
+    if (dist < 150) flee();
+  }, { passive: true });
+
+  // Touch: arm flee quickly so it is hard but still winnable
   let timer = null;
   btn.addEventListener("touchstart", (e) => {
     e.preventDefault();
     if (!isTouch) return;
     clearTimeout(timer);
-    timer = setTimeout(() => { flee(); timer = null; }, 140);
+    timer = setTimeout(() => { flee(); timer = null; }, 60); // HARD delay
   }, { passive: false });
   btn.addEventListener("touchend", () => { clearTimeout(timer); timer = null; }, { passive: true });
   btn.addEventListener("touchcancel", () => { clearTimeout(timer); timer = null; }, { passive: true });
@@ -324,7 +387,6 @@
       timeText.textContent = elapsed.toFixed(2);
     }, 50);
   }
-
   function stopTimer() {
     clearInterval(timerInterval);
     const elapsed = (performance.now() - startMs) / 1000;
@@ -374,6 +436,12 @@
 
   function startGame() {
     startOverlay.style.display = "none";
+    btn.style.display = "block";
+
+    // reset
+    vx = 720; vy = 560;
+    slowActive = false; slowUntil = 0; escapeAt = 0;
+
     placeButton();
     lastT = 0;
     running = true;
@@ -387,7 +455,6 @@
 
   window.addEventListener("load", () => {
     placeButton();
-    // keep timer visible but at 0 until start
     timeText.textContent = "0.00";
   });
 })();
