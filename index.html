@@ -2,324 +2,395 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>Valentine?</title>
   <style>
-    :root {
-      --bg1: #ffe6ef;
-      --bg2: #fff7fb;
-      --text: #3a0b1a;
-      --accent: #ff2d55;
-      --accent2: #ff5a7a;
+    :root{
+      --bg1:#ffe6ef; --bg2:#fff7fb; --text:#3a0b1a;
+      --accent:#ff2d55; --accent2:#ff5a7a;
+    }
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; }
+    body{
+      overflow:hidden;
+      background:radial-gradient(circle at top,var(--bg2),var(--bg1));
+      color:var(--text);
+      user-select:none;
+      -webkit-tap-highlight-color:transparent;
+      touch-action:none; /* helps iOS not treat gestures as scroll */
     }
 
-    * { box-sizing: border-box; }
-    html, body { height: 100%; margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
-
-    body {
-      overflow: hidden;
-      background: radial-gradient(circle at top, var(--bg2), var(--bg1));
-      color: var(--text);
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
+    /* Background hearts layer */
+    #bgHearts{
+      position:fixed; inset:0;
+      pointer-events:none;
+      overflow:hidden;
+      z-index:0;
+    }
+    .bgHeart{
+      position:absolute;
+      opacity:0.35;
+      filter: drop-shadow(0 8px 10px rgba(58,11,26,0.12));
+      animation: drift linear forwards;
+      will-change: transform, opacity;
+    }
+    @keyframes drift{
+      0%   { transform: translate3d(0, 110vh, 0) rotate(0deg) scale(0.9); opacity: 0; }
+      10%  { opacity: 0.35; }
+      100% { transform: translate3d(0, -130vh, 0) rotate(360deg) scale(1.25); opacity: 0; }
     }
 
-    .center {
-      position: absolute;
-      inset: 0;
-      display: grid;
-      place-items: center;
-      padding: 24px;
-      text-align: center;
-      z-index: 1;
+    /* Center question card */
+    .center{
+      position:fixed; inset:0;
+      display:grid; place-items:center;
+      padding:24px; text-align:center;
+      z-index:1;
+      pointer-events:none;
     }
+    .card{
+      background:rgba(255,255,255,.72);
+      border:1px solid rgba(255,45,85,.18);
+      backdrop-filter:blur(8px);
+      border-radius:22px;
+      padding:28px 22px;
+      max-width:560px;
+      width:min(560px,92vw);
+      box-shadow:0 18px 60px rgba(58,11,26,.12);
+    }
+    h1{ margin:0; font-size:clamp(26px,4.2vw,42px); }
 
-    .card {
-      background: rgba(255,255,255,0.7);
-      border: 1px solid rgba(255, 45, 85, 0.18);
+    /* Timer */
+    #timerBar{
+      position:fixed;
+      left:0; right:0; bottom:14px;
+      display:flex; justify-content:center;
+      z-index:3;
+      pointer-events:none;
+    }
+    #timerPill{
+      pointer-events:none;
+      background: rgba(255,255,255,0.78);
+      border: 1px solid rgba(255,45,85,0.18);
       backdrop-filter: blur(8px);
-      border-radius: 22px;
-      padding: 28px 22px;
-      max-width: 560px;
-      width: min(560px, 92vw);
-      box-shadow: 0 18px 60px rgba(58, 11, 26, 0.12);
-    }
-
-    h1 {
-      margin: 0 0 12px;
-      font-size: clamp(26px, 4.2vw, 42px);
+      border-radius: 999px;
+      padding: 10px 14px;
+      box-shadow: 0 10px 28px rgba(58,11,26,0.10);
+      font-weight: 700;
+      color: #7a0f2b;
       letter-spacing: 0.2px;
     }
+    #timerPill span{ font-variant-numeric: tabular-nums; }
 
-    p {
-      margin: 0;
-      opacity: 0.85;
-      font-size: clamp(14px, 2.2vw, 18px);
+    /* Runaway button */
+    #yesBtn{
+      position:fixed; left:0; top:0;
+      z-index:2;
+      border:none;
+      border-radius:999px;
+      padding:14px 22px;
+      font-weight:800;
+      font-size:18px;
+      color:#fff;
+      cursor:pointer;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      box-shadow:0 12px 30px rgba(255,45,85,.35);
+      will-change:transform;
+      transform:translate3d(0,0,0);
+      -webkit-user-select:none;
     }
+    #yesBtn:active{ filter:brightness(.95); } /* don't override transform */
 
-    /* The runaway button */
-    #yesBtn {
-      position: absolute;
-      left: 50%;
-      top: 68%;
-      transform: translate(-50%, -50%);
-      z-index: 2;
-
-      border: none;
-      border-radius: 999px;
-      padding: 14px 22px;
-      font-weight: 700;
-      font-size: 18px;
-      color: white;
-      cursor: pointer;
-
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      box-shadow: 0 12px 30px rgba(255, 45, 85, 0.35);
+    /* Start overlay (minimal, only Start button) */
+    #startOverlay{
+      position:fixed; inset:0; z-index:10;
+      display:grid; place-items:center;
+      background:rgba(255,230,239,.55);
+      backdrop-filter:blur(6px);
+      padding:24px;
+      text-align:center;
     }
-
-    #yesBtn:active { transform: translate(-50%, -50%) scale(0.98); }
+    #startBtn{
+      border:none;
+      border-radius:999px;
+      padding:14px 20px;
+      font-weight:800;
+      font-size:18px;
+      color:#fff;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      box-shadow:0 12px 30px rgba(255,45,85,.25);
+      cursor:pointer;
+    }
 
     /* Win overlay */
-    #win {
-      position: absolute;
-      inset: 0;
-      display: none;
-      place-items: center;
-      text-align: center;
-      z-index: 5;
-      background: radial-gradient(circle at top, #fff, #ffe6ef);
+    #win{
+      position:fixed; inset:0;
+      display:none;
+      place-items:center;
+      text-align:center;
+      z-index:5;
+      background:radial-gradient(circle at top,#fff,#ffe6ef);
     }
-
-    #win .winCard {
-      background: rgba(255,255,255,0.82);
-      border: 1px solid rgba(255, 45, 85, 0.22);
-      backdrop-filter: blur(8px);
-      border-radius: 22px;
-      padding: 28px 22px;
-      width: min(640px, 92vw);
-      box-shadow: 0 18px 60px rgba(58, 11, 26, 0.12);
-      position: relative;
-      overflow: hidden;
+    #win .winCard{
+      background:rgba(255,255,255,.84);
+      border:1px solid rgba(255,45,85,.22);
+      backdrop-filter:blur(8px);
+      border-radius:22px;
+      padding:28px 22px;
+      width:min(640px,92vw);
+      box-shadow:0 18px 60px rgba(58,11,26,.12);
     }
-
-    #win h2 {
-      margin: 0 0 8px;
-      font-size: clamp(24px, 4.2vw, 40px);
-      color: #b3002d;
+    #win h2{
+      margin:0 0 8px;
+      font-size:clamp(22px,4.2vw,40px);
+      color:#b3002d;
     }
+    #win p{ margin:0; font-size:clamp(14px,2.3vw,18px); opacity:0.85; }
 
-    #win p {
-      margin: 0;
-      font-size: clamp(14px, 2.3vw, 18px);
-    }
-
-    /* Flower layer */
-    #flowers {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      overflow: hidden;
-      z-index: 4;
-      display: none;
-    }
-
-    .flower {
-      position: absolute;
-      font-size: 28px;
-      filter: drop-shadow(0 6px 8px rgba(58, 11, 26, 0.18));
-      opacity: 0.95;
+    /* Flowers confetti on win */
+    #flowers{ position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:4; display:none; }
+    .flower{
+      position:absolute;
+      font-size:28px;
+      opacity:0.95;
+      filter:drop-shadow(0 6px 8px rgba(58,11,26,.18));
       animation: floatUp linear forwards;
       will-change: transform, opacity;
     }
-
-    @keyframes floatUp {
-      0%   { transform: translateY(30px) rotate(0deg) scale(0.9); opacity: 0; }
-      10%  { opacity: 1; }
-      100% { transform: translateY(-120vh) rotate(360deg) scale(1.15); opacity: 0; }
-    }
-
-    /* Small hint */
-    .hint {
-      margin-top: 14px;
-      font-size: 12px;
-      opacity: 0.6;
+    @keyframes floatUp{
+      0%{ transform:translateY(30px) rotate(0) scale(.9); opacity:0; }
+      10%{ opacity:1; }
+      100%{ transform:translateY(-120vh) rotate(360deg) scale(1.15); opacity:0; }
     }
   </style>
 </head>
 <body>
+  <div id="bgHearts" aria-hidden="true"></div>
+
   <div class="center">
     <div class="card">
       <h1>Will you be my valentine? 💘</h1>
-      <p>Try to catch the “Yes” button 😄</p>
-      <div class="hint">(Tip: it’s easier on a bigger screen… or with quick thumbs!)</div>
     </div>
   </div>
 
   <button id="yesBtn" aria-label="Yes button">Yes</button>
 
-  <div id="flowers"></div>
+  <div id="timerBar">
+    <div id="timerPill">Time: <span id="timeText">0.00</span>s</div>
+  </div>
+
+  <div id="flowers" aria-hidden="true"></div>
 
   <div id="win">
     <div class="winCard">
-      <h2>Congratulations on being my valentine 🌹</h2>
-      <p>Love you ❤️</p>
+      <h2>Congratulations my love for being my valentine 🌹</h2>
+      <p>❤️</p>
+      <p style="margin-top:10px; font-weight:700; color:#7a0f2b;">
+        You caught it in <span id="finalTime">0.00</span>s
+      </p>
     </div>
   </div>
 
-  <script>
-    const btn = document.getElementById("yesBtn");
-    const win = document.getElementById("win");
-    const flowers = document.getElementById("flowers");
+  <div id="startOverlay">
+    <button id="startBtn">Start</button>
+  </div>
 
-    // Motion state (px/sec)
-    let x = 0, y = 0;
-    let vx = 420, vy = 320; // initial speed
-    let lastT = performance.now();
-    let running = true;
+<script>
+(() => {
+  const btn = document.getElementById("yesBtn");
+  const win = document.getElementById("win");
+  const flowers = document.getElementById("flowers");
+  const startOverlay = document.getElementById("startOverlay");
+  const startBtn = document.getElementById("startBtn");
 
-    // Place button initially within bounds
-    function placeInitial() {
-      const { w, h } = getBounds();
-      x = w * 0.5;
-      y = h * 0.68;
-      setBtnPos();
-    }
+  const timeText = document.getElementById("timeText");
+  const finalTime = document.getElementById("finalTime");
 
-    function getBounds() {
-      const bw = btn.offsetWidth;
-      const bh = btn.offsetHeight;
-      return {
-        w: window.innerWidth - bw,
-        h: window.innerHeight - bh,
-        bw, bh
-      };
-    }
+  const bg = document.getElementById("bgHearts");
 
-    function setBtnPos() {
-      // translate so (x,y) is the button's top-left
-      btn.style.left = x + "px";
-      btn.style.top = y + "px";
-      btn.style.transform = "translate(0, 0)";
-    }
+  // ---------- Background hearts ----------
+  const heartEmojis = ["❤️","💖","💗","💓","💕","💘","💞","💝"];
+  function spawnBgHeart() {
+    const el = document.createElement("div");
+    el.className = "bgHeart";
+    el.textContent = heartEmojis[(Math.random() * heartEmojis.length) | 0];
 
-    function tick(t) {
-      if (!running) return;
+    const x = Math.random() * window.innerWidth;
+    el.style.left = x + "px";
+    el.style.top = (window.innerHeight + 40) + "px";
 
-      const dt = Math.min(0.033, (t - lastT) / 1000);
-      lastT = t;
+    const size = 16 + Math.random() * 26;
+    el.style.fontSize = size + "px";
 
-      const b = getBounds();
+    const dur = 6 + Math.random() * 8; // slower drift
+    el.style.animationDuration = dur + "s";
 
-      x += vx * dt;
-      y += vy * dt;
+    bg.appendChild(el);
+    el.addEventListener("animationend", () => el.remove());
+  }
 
-      // Bounce off edges
-      if (x <= 0) { x = 0; vx = Math.abs(vx); }
-      if (x >= b.w) { x = b.w; vx = -Math.abs(vx); }
-      if (y <= 0) { y = 0; vy = Math.abs(vy); }
-      if (y >= b.h) { y = b.h; vy = -Math.abs(vy); }
+  // Start a steady background stream right away
+  for (let i = 0; i < 20; i++) setTimeout(spawnBgHeart, i * 120);
+  setInterval(() => {
+    for (let i = 0; i < 3; i++) spawnBgHeart();
+  }, 700);
 
-      setBtnPos();
-      requestAnimationFrame(tick);
-    }
+  // ---------- Game movement ----------
+  let x = 0, y = 0;              // top-left of button
+  let vx = 420, vy = 320;        // px/sec
+  let lastT = 0;
+  let running = false;           // start only after user gesture
 
-    // Make it "run away" on hover/touch by boosting speed + random nudge
-    function flee() {
-      if (!running) return;
+  const isTouch = matchMedia("(pointer: coarse)").matches;
 
-      // Increase speed a bit each time (capped)
-      const speed = Math.hypot(vx, vy);
-      const boost = Math.min(1.25, 700 / Math.max(speed, 1));
-      vx *= boost;
-      vy *= boost;
+  const bounds = () => {
+    const r = btn.getBoundingClientRect();
+    const bw = r.width || 120;
+    const bh = r.height || 50;
+    return {
+      maxX: Math.max(0, window.innerWidth - bw),
+      maxY: Math.max(0, window.innerHeight - bh),
+    };
+  };
 
-      // Random direction nudge
-      const angle = Math.random() * Math.PI * 2;
-      vx += Math.cos(angle) * 220;
-      vy += Math.sin(angle) * 220;
+  const apply = () => { btn.style.transform = `translate3d(${x}px, ${y}px, 0)`; };
 
-      // Cap overall speed
-      const cap = 1100;
-      const newSpeed = Math.hypot(vx, vy);
-      if (newSpeed > cap) {
-        vx = (vx / newSpeed) * cap;
-        vy = (vy / newSpeed) * cap;
-      }
-    }
+  const clamp = () => {
+    const b = bounds();
+    x = Math.max(0, Math.min(x, b.maxX));
+    y = Math.max(0, Math.min(y, b.maxY));
+  };
 
-    // Desktop hover
-    btn.addEventListener("mouseenter", flee);
+  function tick(t) {
+    if (!running) return;
 
-    // Mobile touch: on touchstart, it flees immediately (but still tappable if you nail it)
-    btn.addEventListener("touchstart", (e) => {
-      // Don't block click; just make it flee
-      flee();
-    }, { passive: true });
+    if (!lastT) lastT = t;
+    const dt = Math.min(0.033, (t - lastT) / 1000);
+    lastT = t;
 
-    // Win
-    btn.addEventListener("click", () => {
-      running = false;
-      btn.style.display = "none";
-      win.style.display = "grid";
-      flowers.style.display = "block";
-      spawnFlowers();
-    });
+    const b = bounds();
+    x += vx * dt;
+    y += vy * dt;
 
-    // Flowers 🌹 (emoji-based)
-    const flowerEmojis = ["🌹","🌺","🌷","💐","❤️","🌸"];
-    function spawnOneFlower() {
-      const el = document.createElement("div");
-      el.className = "flower";
-      el.textContent = flowerEmojis[Math.floor(Math.random() * flowerEmojis.length)];
+    // bounce
+    if (x <= 0) { x = 0; vx = Math.abs(vx); }
+    if (x >= b.maxX) { x = b.maxX; vx = -Math.abs(vx); }
+    if (y <= 0) { y = 0; vy = Math.abs(vy); }
+    if (y >= b.maxY) { y = b.maxY; vy = -Math.abs(vy); }
 
-      const startX = Math.random() * window.innerWidth;
-      const startY = window.innerHeight + 40;
+    apply();
+    requestAnimationFrame(tick);
+  }
 
-      el.style.left = startX + "px";
-      el.style.top = startY + "px";
+  function flee() {
+    if (!running) return;
 
-      const dur = 3 + Math.random() * 2.5; // 3–5.5s
-      el.style.animationDuration = dur + "s";
+    const speed = Math.hypot(vx, vy);
+    const boost = Math.min(1.25, 700 / Math.max(speed, 1));
+    vx *= boost; vy *= boost;
 
-      const size = 22 + Math.random() * 22;
-      el.style.fontSize = size + "px";
+    const a = Math.random() * Math.PI * 2;
+    vx += Math.cos(a) * 220;
+    vy += Math.sin(a) * 220;
 
-      flowers.appendChild(el);
-      el.addEventListener("animationend", () => el.remove());
-    }
+    const cap = 1100;
+    const ns = Math.hypot(vx, vy);
+    if (ns > cap) { vx = (vx / ns) * cap; vy = (vy / ns) * cap; }
+  }
 
-    function spawnFlowers() {
-      // burst + continuous stream
-      for (let i = 0; i < 40; i++) setTimeout(spawnOneFlower, i * 40);
-      const interval = setInterval(() => {
-        if (win.style.display !== "grid") return;
-        for (let i = 0; i < 6; i++) spawnOneFlower();
-      }, 380);
+  // Desktop hover makes it run away
+  btn.addEventListener("mouseenter", () => { if (!isTouch) flee(); });
 
-      // stop after a while (still looks great)
-      setTimeout(() => clearInterval(interval), 12000);
-    }
+  // Touch: arm flee after a tiny delay so taps can still win
+  let timer = null;
+  btn.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    if (!isTouch) return;
+    clearTimeout(timer);
+    timer = setTimeout(() => { flee(); timer = null; }, 140);
+  }, { passive: false });
+  btn.addEventListener("touchend", () => { clearTimeout(timer); timer = null; }, { passive: true });
+  btn.addEventListener("touchcancel", () => { clearTimeout(timer); timer = null; }, { passive: true });
 
-    // Handle resize nicely
-    window.addEventListener("resize", () => {
-      const b = getBounds();
-      x = Math.max(0, Math.min(x, b.w));
-      y = Math.max(0, Math.min(y, b.h));
-      setBtnPos();
-    });
+  // ---------- Timer ----------
+  let startMs = 0;
+  let timerInterval = null;
 
-    // Start
-    placeInitial();
-    // Convert initial transform centering into explicit top-left coordinates:
-    // We'll place using top-left, so adjust after layout
-    requestAnimationFrame(() => {
-      // center placement: shift by half button size
-      x = (window.innerWidth - btn.offsetWidth) * 0.5;
-      y = (window.innerHeight - btn.offsetHeight) * 0.68;
-      setBtnPos();
-      lastT = performance.now();
-      requestAnimationFrame(tick);
-    });
-  </script>
+  function startTimer() {
+    startMs = performance.now();
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      const elapsed = (performance.now() - startMs) / 1000;
+      timeText.textContent = elapsed.toFixed(2);
+    }, 50);
+  }
+
+  function stopTimer() {
+    clearInterval(timerInterval);
+    const elapsed = (performance.now() - startMs) / 1000;
+    timeText.textContent = elapsed.toFixed(2);
+    finalTime.textContent = elapsed.toFixed(2);
+  }
+
+  // ---------- Win ----------
+  btn.addEventListener("click", () => {
+    if (!running) return;
+    running = false;
+    stopTimer();
+
+    btn.style.display = "none";
+    win.style.display = "grid";
+    flowers.style.display = "block";
+    spawnFlowers();
+  });
+
+  // Flowers confetti
+  const flowerEmojis = ["🌹","🌺","🌷","💐","❤️","🌸"];
+  function spawnOneFlower() {
+    const el = document.createElement("div");
+    el.className = "flower";
+    el.textContent = flowerEmojis[(Math.random() * flowerEmojis.length) | 0];
+    el.style.left = (Math.random() * window.innerWidth) + "px";
+    el.style.top = (window.innerHeight + 40) + "px";
+    el.style.fontSize = (22 + Math.random() * 22) + "px";
+    el.style.animationDuration = (3 + Math.random() * 2.5) + "s";
+    flowers.appendChild(el);
+    el.addEventListener("animationend", () => el.remove());
+  }
+  function spawnFlowers() {
+    for (let i = 0; i < 40; i++) setTimeout(spawnOneFlower, i * 40);
+    const interval = setInterval(() => { for (let i = 0; i < 6; i++) spawnOneFlower(); }, 380);
+    setTimeout(() => clearInterval(interval), 12000);
+  }
+
+  // ---------- Start ----------
+  function placeButton() {
+    const b = bounds();
+    x = b.maxX * 0.5;
+    y = b.maxY * 0.68;
+    clamp();
+    apply();
+  }
+
+  function startGame() {
+    startOverlay.style.display = "none";
+    placeButton();
+    lastT = 0;
+    running = true;
+    startTimer();
+    requestAnimationFrame(tick);
+  }
+
+  startBtn.addEventListener("click", startGame);
+
+  window.addEventListener("resize", () => { clamp(); apply(); });
+
+  window.addEventListener("load", () => {
+    placeButton();
+    // keep timer visible but at 0 until start
+    timeText.textContent = "0.00";
+  });
+})();
+</script>
 </body>
 </html>
